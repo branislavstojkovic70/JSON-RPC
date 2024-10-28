@@ -53,6 +53,7 @@ func init() {
 	}
 	fmt.Println("Connected to Ethereum client")
 
+	// Create LRU cache with a maximum size of 100 items
 	cache, err = lru.New(100)
 	if err != nil {
 		log.Fatalf("Error creating cache: %v", err)
@@ -107,6 +108,22 @@ func handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		sendResult(w, req.ID, map[string]string{"balance": balance.String()})
+	case "sendEther":
+		if len(req.Params) < 3 {
+			sendError(w, req.ID, "Invalid parameters")
+			return
+		}
+		senderAddress := req.Params[0].(string)
+		receiverAddress := req.Params[1].(string)
+		amount := new(big.Int).SetUint64(uint64(req.Params[2].(float64))) // Convert to *big.Int
+
+		txHash, err := sendEtherWithAuth(senderAddress, receiverAddress, amount)
+		if err != nil {
+			sendError(w, req.ID, err.Error())
+			return
+		}
+		sendResult(w, req.ID, map[string]string{"tx_hash": txHash})
+
 	default:
 		sendError(w, req.ID, "Method not found")
 	}
@@ -144,6 +161,7 @@ func awardItem(playerAddress, tokenURI string) (string, error) {
 }
 
 func getBalanceOf(playerAddress string) (*big.Int, error) {
+	// Check if balance is in the cache
 	if val, ok := cache.Get(playerAddress); ok {
 		return val.(*big.Int), nil
 	}
@@ -177,6 +195,39 @@ func getBalanceOf(playerAddress string) (*big.Int, error) {
 
 	cache.Add(playerAddress, balance)
 	return balance, nil
+}
+
+func sendEtherWithAuth(senderAddress, receiverAddress string, amount *big.Int) (string, error) {
+	balance, err := getBalanceOf(senderAddress)
+	if err != nil {
+		return "", err
+	}
+	if balance.Cmp(big.NewInt(0)) <= 0 {
+		return "", fmt.Errorf("user does not own an NFT")
+	}
+
+	gasPrice, err := client.SuggestGasPrice(context.Background())
+	if err != nil {
+		return "", fmt.Errorf("failed to suggest gas price: %v", err)
+	}
+
+	// nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(senderAddress)``)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to fetch nonce: %v", err)
+	// }
+
+	tx := types.NewTransaction(18, common.HexToAddress(receiverAddress), amount, 21000, gasPrice, nil)
+	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
+	if err != nil {
+		return "", fmt.Errorf("transaction signing failed: %v", err)
+	}
+
+	err = client.SendTransaction(context.Background(), signedTx)
+	if err != nil {
+		return "", fmt.Errorf("failed to send transaction: %v", err)
+	}
+
+	return signedTx.Hash().Hex(), nil
 }
 
 func sendResult(w http.ResponseWriter, id int, result interface{}) {
