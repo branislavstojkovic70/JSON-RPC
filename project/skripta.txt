@@ -1,0 +1,12 @@
+sudo npm install -g ganache-cli    instalacija ganache
+
+ganache-cli   pokretanje ganache na lokalnoj masisni
+
+
+1 ether = 10^18 wei
+
+//golang created accounts from scratch
+//0xa7001D3e6ED777BB28BD8246c5192Bf5aB8d0151 
+//0x0F9f5Feb075985Cf015C626bBaCFC0B37eE0130D
+
+//contract address -- 0x0e075058f9d07a328c5b84ad1e1e18d159fee1e8
