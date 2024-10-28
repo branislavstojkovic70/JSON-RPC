@@ -193,7 +193,6 @@ func getBalanceOf(playerAddress string) (*big.Int, error) {
 		return nil, fmt.Errorf("failed to unpack balanceOf output: %v", err)
 	}
 
-	// Add balance to cache
 	cache.Add(playerAddress, balance)
 	return balance, nil
 }
@@ -207,17 +206,17 @@ func sendEtherWithAuth(senderAddress, receiverAddress string, amount *big.Int) (
 		return "", fmt.Errorf("user does not own an NFT")
 	}
 
-	// nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(senderAddress))
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to fetch nonce: %v", err)
-	// }
-
 	gasPrice, err := client.SuggestGasPrice(context.Background())
 	if err != nil {
 		return "", fmt.Errorf("failed to suggest gas price: %v", err)
 	}
 
-	tx := types.NewTransaction(17, common.HexToAddress(receiverAddress), amount, 21000, gasPrice, nil)
+	// nonce, err := client.PendingNonceAt(context.Background(), common.HexToAddress(senderAddress)``)
+	// if err != nil {
+	// 	return "", fmt.Errorf("failed to fetch nonce: %v", err)
+	// }
+
+	tx := types.NewTransaction(18, common.HexToAddress(receiverAddress), amount, 21000, gasPrice, nil)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 	if err != nil {
 		return "", fmt.Errorf("transaction signing failed: %v", err)
