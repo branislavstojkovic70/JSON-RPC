@@ -20,13 +20,12 @@ import (
 	lru "github.com/hashicorp/golang-lru"
 )
 
-// Global variables
 var (
 	infraURL   = "https://sepolia.infura.io/v3/8aaddcea52c24faeac2b2f6830528e93"
 	client     *ethclient.Client
 	nftAddress = common.HexToAddress("0x0e075058f9d07a328c5b84ad1e1e18d159fee1e8")
 	abiJSON    = `[{"inputs":[{"internalType":"address","name":"owner","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"player","type":"address"},{"internalType":"string","name":"tokenURI","type":"string"}],"name":"awardItem","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"nonpayable","type":"function"}]`
-	chainID    = big.NewInt(11155111) // Sepolia network ID
+	chainID    = big.NewInt(11155111)
 	key        *ecdsa.PrivateKey
 	cache      *lru.Cache
 )
@@ -53,13 +52,12 @@ func init() {
 	}
 	fmt.Println("Connected to Ethereum client")
 
-	// Create LRU cache with a maximum size of 100 items
 	cache, err = lru.New(100)
 	if err != nil {
 		log.Fatalf("Error creating cache: %v", err)
 	}
 
-	keyFile := "/Users/bane/Documents/GitHub/JSON-RPC/project/wallet/UTC--2024-10-23T17-43-44.459150000Z--a7001d3e6ed777bb28bd8246c5192bf5ab8d0151.json" // Replace with the actual path
+	keyFile := "wallet/UTC--2024-10-23T17-43-44.459150000Z--a7001d3e6ed777bb28bd8246c5192bf5ab8d0151.json"
 	password := "password"
 	keyData, err := ioutil.ReadFile(keyFile)
 
@@ -74,7 +72,6 @@ func init() {
 	key = keyBytes.PrivateKey
 }
 
-// JSON-RPC handler
 func handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 	var req JSONRPCRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -115,7 +112,7 @@ func handleJSONRPC(w http.ResponseWriter, r *http.Request) {
 		}
 		senderAddress := req.Params[0].(string)
 		receiverAddress := req.Params[1].(string)
-		amount := new(big.Int).SetUint64(uint64(req.Params[2].(float64))) // Convert to *big.Int
+		amount := new(big.Int).SetUint64(uint64(req.Params[2].(float64)))
 
 		txHash, err := sendEtherWithAuth(senderAddress, receiverAddress, amount)
 		if err != nil {
@@ -161,7 +158,6 @@ func awardItem(playerAddress, tokenURI string) (string, error) {
 }
 
 func getBalanceOf(playerAddress string) (*big.Int, error) {
-	// Check if balance is in the cache
 	if val, ok := cache.Get(playerAddress); ok {
 		return val.(*big.Int), nil
 	}
@@ -216,7 +212,7 @@ func sendEtherWithAuth(senderAddress, receiverAddress string, amount *big.Int) (
 	// 	return "", fmt.Errorf("failed to fetch nonce: %v", err)
 	// }
 
-	tx := types.NewTransaction(18, common.HexToAddress(receiverAddress), amount, 21000, gasPrice, nil)
+	tx := types.NewTransaction(19, common.HexToAddress(receiverAddress), amount, 21000, gasPrice, nil)
 	signedTx, err := types.SignTx(tx, types.NewEIP155Signer(chainID), key)
 	if err != nil {
 		return "", fmt.Errorf("transaction signing failed: %v", err)
