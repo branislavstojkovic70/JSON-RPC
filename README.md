@@ -21,8 +21,8 @@ This project implements a JSON-RPC server that interacts with an Ethereum smart 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/blockchainjsonrpc.git
-   cd blockchainjsonrpc
+   git clone [https://github.com/yourusername/blockchainjsonrpc.git](https://github.com/branislavstojkovic70/NFT-Gate-Golang)
+   cd project
    ```
 
 2. Install dependencies:
